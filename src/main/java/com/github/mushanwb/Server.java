@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 // 服务端
 public class Server {
@@ -39,7 +40,7 @@ public class Server {
 
     public static void main(String[] args) throws IOException {
         // 使用 8081 端口，并启动死循环监听
-        new Server(8081).start();
+        new Server(8080).start();
     }
 
     /**
@@ -51,7 +52,7 @@ public class Server {
     public void registerClient(ClientConnection clientConnection) {
         clients.put(clientConnection.getClientId(), clientConnection);
         // 通告用户上线了
-        this.clientOnline(clientConnection);
+        clientOnline(clientConnection);
     }
 
     /**
@@ -59,7 +60,7 @@ public class Server {
      * @param clientConnection  上线用户
      */
     private void clientOnline(ClientConnection clientConnection) {
-        clients.values().forEach(client -> this.dispatchMessage(client, "系统", "所有人", clientConnection.getClientName() + "上线了"));
+        clients.values().forEach(client -> dispatchMessage(client, "系统", "所有人", clientConnection.getClientName() + "上线了" + getAllClientsInfo()));
     }
 
     /**
@@ -67,9 +68,10 @@ public class Server {
      * @param message   发送目标
      */
     public void sendMessage(ClientConnection src, Message message) throws IOException {
+        System.out.println(message);
         // 所有人，广播消息
         if (message.getId() == 0) {
-            clients.values().forEach(client -> this.dispatchMessage(client, src.getClientName(), "所有人", message.getMessage()));
+            clients.values().forEach(client -> dispatchMessage(client, src.getClientName(), "所有人", message.getMessage()));
         } else {
             // 单独发送某一个人
             int targetUser = message.getId();
@@ -77,7 +79,7 @@ public class Server {
             if (target == null) {
                 System.err.println("用户" + targetUser + "不存在");
             } else {
-                this.dispatchMessage(target, src.getClientName(), "你", message.getMessage());
+                dispatchMessage(target, src.getClientName(), "你", message.getMessage());
             }
         }
     }
@@ -88,7 +90,7 @@ public class Server {
      */
     public void clientOffline(ClientConnection clientConnection) {
         clients.remove(clientConnection.getClientId());
-        clients.values().forEach(client -> this.dispatchMessage(clientConnection, "系统", "所有人", client.getClientName() + "下线了"));
+        clients.values().forEach(client -> dispatchMessage(clientConnection, "系统", "所有人", client.getClientName() + "下线了" + getAllClientsInfo()));
     }
 
     /**
@@ -101,9 +103,12 @@ public class Server {
         try {
             client.sendMessage(src + "对" + target + "说" + message);
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException();
+            throw new RuntimeException(e);
         }
+    }
+
+    private String getAllClientsInfo() {
+        return clients.entrySet().stream().map(entry -> entry.getKey() + ":" + entry.getValue().getClientName()).collect(Collectors.joining(","));
     }
 
 }
