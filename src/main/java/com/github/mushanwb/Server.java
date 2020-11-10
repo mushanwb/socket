@@ -50,12 +50,64 @@ public class Server {
      */
     public void registerClient(ClientConnection clientConnection) {
         clients.put(clientConnection.getClientId(), clientConnection);
+        // 通告用户上线了
+        this.clientOnline(clientConnection);
     }
 
-    public void sendMessage(Message message) {
-
+    /**
+     * 用户上线，通知所有的人
+     * @param clientConnection  上线用户
+     */
+    private void clientOnline(ClientConnection clientConnection) {
+        clients.values().forEach(client -> {
+            try {
+                client.sendMessage("系统对所有人说：" + clientConnection.getClientName() + "上线啦");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
+    /**
+     * @param src 消息来源
+     * @param message   发送目标
+     */
+    public void sendMessage(ClientConnection src, Message message) throws IOException {
+        // 所有人，广播消息
+        if (message.getId() == 0) {
+            clients.values().forEach(client -> {
+                try {
+                    client.sendMessage(src.getClientName() + "对所有人说：" + message.getMessage());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        } else {
+            // 单独发送某一个人
+            int targetUser = message.getId();
+            ClientConnection target = clients.get(targetUser);
+            if (target == null) {
+                System.err.println("用户" + targetUser + "不存在");
+            } else {
+                target.sendMessage(src.getClientName() + "对你说：" + message.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 用户下线
+     * @param clientConnection 下线用户
+     */
     public void clientOffline(ClientConnection clientConnection) {
+        clients.remove(clientConnection.getClientId());
+        clients.values().forEach(client -> {
+            try {
+                client.sendMessage("系统对所有人说：" + clientConnection.getClientName() + "下线了");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
+
+
 }

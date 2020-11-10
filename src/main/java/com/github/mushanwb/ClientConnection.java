@@ -48,11 +48,12 @@ public class ClientConnection extends Thread {
                 // 第一次连上服务端的时候，将昵称发送给服务端
                 if (clientName == null) {
                     clientName = line;
+                    // 注册用户
                     server.registerClient(this);
                 } else {
                     // 不是第一次连接的时候，将获取客户端发送的数据，并且由服务器转发给另外一个客户端
                     Message message = JSON.parseObject(line, Message.class);
-                    server.sendMessage(message);
+                    server.sendMessage(this, message);
                 }
             }
         } catch (IOException e) {
@@ -61,5 +62,15 @@ public class ClientConnection extends Thread {
             // 下线
             server.clientOffline(this);
         }
+    }
+
+    /**
+     * @param message 发送的消息
+     * @throws IOException  IO 异常
+     */
+    public void sendMessage(String message) throws IOException {
+        socket.getOutputStream().write(message.getBytes());
+        socket.getOutputStream().write('\n');
+        socket.getOutputStream().flush();
     }
 }
