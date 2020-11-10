@@ -33,7 +33,7 @@ public class Server {
             // 使用多线程的方式来读取客户端发送的数据
             // 如果不用多线程方式读取的话，当服务端正在读取一个用户的信息时，accept 方法不执行
             // 这样会导致其他用户将连接不进来，因此我们需要将读取信息的操作交给多线程处理
-            new ClientConnection(socket, this).start();
+            new ClientConnection(socket, this, COUNTER.incrementAndGet()).start();
         }
     }
 
@@ -49,6 +49,13 @@ public class Server {
      * @param clientConnection 连接的客户端
      */
     public void registerClient(ClientConnection clientConnection) {
-        clients.put(COUNTER.incrementAndGet(), clientConnection);
+        clients.put(clientConnection.getClientId(), clientConnection);
+    }
+
+    public void sendMessage(Message message) {
+
+    }
+
+    public void clientOffline(ClientConnection clientConnection) {
     }
 }

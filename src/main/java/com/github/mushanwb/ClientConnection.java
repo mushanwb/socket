@@ -1,5 +1,7 @@
 package com.github.mushanwb;
 
+import com.alibaba.fastjson.JSON;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,12 +18,21 @@ public class ClientConnection extends Thread {
     private Integer clientId;
     private Server server;
 
+    public String getClientName() {
+        return clientName;
+    }
+
+    public Integer getClientId() {
+        return clientId;
+    }
 
     /**
      * @param socket 接收一个 socket 数据
      */
     public ClientConnection(Socket socket,
-                            Server server) {
+                            Server server,
+                            Integer clientId) {
+        this.clientId = clientId;
         this.socket = socket;
         this.server = server;
     }
@@ -39,11 +50,16 @@ public class ClientConnection extends Thread {
                     clientName = line;
                     server.registerClient(this);
                 } else {
-                    // 不是第一次连接的时候，将获取客户端发送的数据，并且转发给另外一个客户端
+                    // 不是第一次连接的时候，将获取客户端发送的数据，并且由服务器转发给另外一个客户端
+                    Message message = JSON.parseObject(line, Message.class);
+                    server.sendMessage(message);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            // 下线
+            server.clientOffline(this);
         }
     }
 }
