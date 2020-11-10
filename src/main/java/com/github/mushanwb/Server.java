@@ -90,7 +90,7 @@ public class Server {
      */
     public void clientOffline(ClientConnection clientConnection) {
         clients.remove(clientConnection.getClientId());
-        clients.values().forEach(client -> dispatchMessage(client, "系统", "所有人", clientConnection.getClientName() + "下线了" + getAllClientsInfo()));
+        clients.values().forEach(client -> dispatchMessage(clientConnection, "系统", "所有人", client.getClientName() + "下线了" + getAllClientsInfo()));
     }
 
     /**
