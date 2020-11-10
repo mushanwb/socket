@@ -61,7 +61,7 @@ public class Server {
     private void clientOnline(ClientConnection clientConnection) {
         clients.values().forEach(client -> {
             try {
-                client.sendMessage("系统对所有人说：" + clientConnection.getClientName() + "上线啦");
+                this.dispatchMessage(client, "系统", "所有人", clientConnection.getClientName() + "上线了");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -77,7 +77,7 @@ public class Server {
         if (message.getId() == 0) {
             clients.values().forEach(client -> {
                 try {
-                    client.sendMessage(src.getClientName() + "对所有人说：" + message.getMessage());
+                    this.dispatchMessage(client, src.getClientName(), "所有人", message.getMessage());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -89,7 +89,7 @@ public class Server {
             if (target == null) {
                 System.err.println("用户" + targetUser + "不存在");
             } else {
-                target.sendMessage(src.getClientName() + "对你说：" + message.getMessage());
+                this.dispatchMessage(target, src.getClientName(), "你", message.getMessage());
             }
         }
     }
@@ -102,12 +102,22 @@ public class Server {
         clients.remove(clientConnection.getClientId());
         clients.values().forEach(client -> {
             try {
-                client.sendMessage("系统对所有人说：" + clientConnection.getClientName() + "下线了");
+                this.dispatchMessage(clientConnection, "系统", "所有人", client.getClientName() + "下线了");
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
     }
 
+    /**
+     * @param client 连接
+     * @param src   消息来源
+     * @param target   发送目标
+     * @param message   消息
+     * @throws IOException
+     */
+    private void dispatchMessage(ClientConnection client, String src, String target, String message) throws IOException {
+        client.sendMessage(src + "对" + target + "说" + message);
+    }
 
 }
