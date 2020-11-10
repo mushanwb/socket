@@ -59,13 +59,7 @@ public class Server {
      * @param clientConnection  上线用户
      */
     private void clientOnline(ClientConnection clientConnection) {
-        clients.values().forEach(client -> {
-            try {
-                this.dispatchMessage(client, "系统", "所有人", clientConnection.getClientName() + "上线了");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        clients.values().forEach(client -> this.dispatchMessage(client, "系统", "所有人", clientConnection.getClientName() + "上线了"));
     }
 
     /**
@@ -75,13 +69,7 @@ public class Server {
     public void sendMessage(ClientConnection src, Message message) throws IOException {
         // 所有人，广播消息
         if (message.getId() == 0) {
-            clients.values().forEach(client -> {
-                try {
-                    this.dispatchMessage(client, src.getClientName(), "所有人", message.getMessage());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+            clients.values().forEach(client -> this.dispatchMessage(client, src.getClientName(), "所有人", message.getMessage()));
         } else {
             // 单独发送某一个人
             int targetUser = message.getId();
@@ -100,13 +88,7 @@ public class Server {
      */
     public void clientOffline(ClientConnection clientConnection) {
         clients.remove(clientConnection.getClientId());
-        clients.values().forEach(client -> {
-            try {
-                this.dispatchMessage(clientConnection, "系统", "所有人", client.getClientName() + "下线了");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        clients.values().forEach(client -> this.dispatchMessage(clientConnection, "系统", "所有人", client.getClientName() + "下线了"));
     }
 
     /**
@@ -114,10 +96,14 @@ public class Server {
      * @param src   消息来源
      * @param target   发送目标
      * @param message   消息
-     * @throws IOException
      */
-    private void dispatchMessage(ClientConnection client, String src, String target, String message) throws IOException {
-        client.sendMessage(src + "对" + target + "说" + message);
+    private void dispatchMessage(ClientConnection client, String src, String target, String message) {
+        try {
+            client.sendMessage(src + "对" + target + "说" + message);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
     }
 
 }
